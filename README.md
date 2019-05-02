@@ -1,2 +1,4 @@
 # HavardX_data_sciece
-All 9 courses for professional certificate code in R . From basic to data science level.
+8 courses for professional certificate code in R . 
+From basic to data science level.
+Not include final project
