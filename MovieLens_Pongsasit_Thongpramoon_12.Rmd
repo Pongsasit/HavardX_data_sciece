@@ -1,0 +1,91 @@
+---
+title: "MovieLens Project"
+author: "Pongsasit Thongpramoon"
+date: "2019年5月12日"
+output: pdf_document
+---
+
+#1.Introduction
+
+##1.1Introduction
+For this project, I created a movie recommendation system using the MovieLens dataset. The version of movielens included in the dslabs package is just a small subset of a much larger dataset with millions of ratings. 
+I used the 10M version of the MovieLens dataset, collected by GroupLens Research (https://grouplens.org/datasets/movielens/10m/). 
+The target of this project is to train a machine learning algorithm using the inputs of a provided subset to predict movie ratings in the provided validation set.
+
+##1.2 Know the data
+## 	1.2.1 Download and Build the dataset.
+
+```{r, echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE}
+###################################
+# Create edx set and validation set
+###################################
+
+# Note: this process could take a couple of minutes
+
+if(!require(tidyverse)) install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+if(!require(caret)) install.packages("caret", repos = "http://cran.us.r-project.org")
+
+# MovieLens 10M dataset:
+# https://grouplens.org/datasets/movielens/10m/
+# http://files.grouplens.org/datasets/movielens/ml-10m.zip
+
+dl <- tempfile()
+download.file("http://files.grouplens.org/datasets/movielens/ml-10m.zip", dl)
+
+ratings <- read.table(text = gsub("::", "\t", readLines(unzip(dl, "ml-10M100K/ratings.dat"))),
+                      col.names = c("userId", "movieId", "rating", "timestamp"))
+
+movies <- str_split_fixed(readLines(unzip(dl, "ml-10M100K/movies.dat")), "\\::", 3)
+colnames(movies) <- c("movieId", "title", "genres")
+movies <- as.data.frame(movies) %>% mutate(movieId = as.numeric(levels(movieId))[movieId],
+                                           title = as.character(title),
+                                           genres = as.character(genres))
+movielens <- left_join(ratings, movies, by = "movieId")
+```
+
+Split the dataset into 2 subsets, “edX” is train set and “validation” is test set.
+```{r, echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE}
+# Validation set will be 10% of MovieLens data
+set.seed(1)
+test_index <- createDataPartition(y = movielens$rating, times = 1, p = 0.1, list = FALSE)
+edx <- movielens[-test_index,]
+temp <- movielens[test_index,]
+
+# Make sure userId and movieId in validation set are also in edx set
+validation <- temp %>% 
+     semi_join(edx, by = "movieId") %>%
+     semi_join(edx, by = "userId")
+
+# Add rows removed from validation set back into edx set
+removed <- anti_join(temp, validation)
+edx <- rbind(edx, removed)
+
+rm(dl, ratings, movies, test_index, temp, movielens, removed)
+```
+
+I trained my model only on “edX”, “validation” set will be used to test the algorithm.
+\pagebreak
+
+##1.2.2	Know Dataset
+At first I use head function to see overall data in this dataset.  
+```{r head, echo = FALSE}
+head(edx) %>% 
+  print.data.frame
+```
+
+Then find the dimension of edX.
+```{r dim, echo = FALSE}
+dim(x)
+```
+
+Then find the amount of 0 and 3 as given as rating in this dataset.
+```{r , echo = FALSE}
+#Find zeros were given as ratings in the edx dataset
+edx %>% filter(rating == 0) %>% tally()
+#Find threes were given as rating in the edx dataset
+edx %>% filter(rating == 3) %>% tally()
+```
+
+k the movies by movie ratings.
+
+find top five of the rating and show that half stars rating is less than whole star rating. As below.
